@@ -1,7 +1,8 @@
-./.vs
-./x64
+.vs
+x64
 *.ico
 *.rc
+*.sln
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
