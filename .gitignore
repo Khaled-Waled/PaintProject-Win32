@@ -1,0 +1,7 @@
+./.vs
+./x64
+*.ico
+*.rc
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
