@@ -1,15 +1,17 @@
 #pragma once
 #include <Windows.h>
-inline void sleepX(int modifier)
+struct Vector
 {
-	static 	int time = 0;
-	if (time == modifier)
+	int v[2];
+	Vector(int x = 0, int y = 0)
 	{
-		Sleep(1); time = 0;
+		v[0] = x; v[1] = y;
 	}
-	else time++;
+	int& operator[](int i) {
+		return v[i];
+	}
+};
 
-}
 inline int Round(double x)
 {
 	return (int)(x + 0.5);
@@ -23,15 +25,3 @@ inline void swap(int& x1, int& y1, int& x2, int& y2)
 	y1 = y2;
 	y2 = tmp;
 }
-
-struct Vector
-{
-	int v[2];
-	Vector(int x = 0, int y = 0)
-	{
-		v[0] = x; v[1] = y;
-	}
-	int& operator[](int i) {
-		return v[i];
-	}
-};
