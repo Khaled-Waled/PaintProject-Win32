@@ -162,7 +162,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 17) //Cardinal Spline Curve
 		{
-
+			contSpline(hwnd, hdc, lParam, RGB(0, 0, 200));
 		}
 		else if (command == 18) //Direct Ellipse Drawing
 		{
@@ -170,7 +170,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 19) //Polar Ellipse Drawing
 		{
-
+			contEllipseDraw(hwnd, hdc, lParam, RGB(0, 0, 255));
 		}
 		else if (command == 20) //Midpoint Ellipse Drawing
 		{

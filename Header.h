@@ -7,9 +7,14 @@ struct Vector
 	{
 		v[0] = x; v[1] = y;
 	}
+
 	int& operator[](int i) {
 		return v[i];
 	}
+	Vector operator-(const Vector& b) {
+		Vector toRet(this->v[0] - b.v[0], this->v[1] - b.v[1]);
+		return toRet;
+	}	
 };
 
 inline int Round(double x)

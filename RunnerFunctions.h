@@ -4,6 +4,13 @@
 #include "Header.h"
 #include "LineAlgos.h"
 #include "CircleAlgos.h"
+#include "Splines.h"
+using namespace std;
+
+
+inline double eclidDis(Vector p1, Vector p2) {
+	return sqrt(((p1[0] - p2[0]) * (p1[0] - p2[0])) + ((p1[1] - p2[1]) * (p1[1] - p2[1])));
+}
 
 inline void contLineDraw(HWND hwnd, HDC hdc, LPARAM lp, void (*DrawLine) (HDC, int,int,int,int, COLORREF))
 {
@@ -45,4 +52,59 @@ inline void contCircleDraw(HWND hwnd, HDC hdc, LPARAM lp, void (*DrawCircle) (HD
 		index = 0;
 	}
 	else index++;
+}
+
+inline void contEllipseDraw(HWND hwnd, HDC hdc, LPARAM lp, COLORREF color)
+{
+	static Vector p[3];
+	static int index = 0;
+
+	int x;
+	int y;
+
+	x = LOWORD(lp);
+	y = HIWORD(lp);
+	p[index][0] = x;
+	p[index][1] = y;
+
+	if (index == 2)
+	{
+		hdc = GetDC(hwnd);
+		double a = eclidDis(p[0], p[1]);
+		double b = eclidDis(p[0], p[2]);
+
+		DrawEllipseIterative(hdc, p[0][0], p[0][1], a, b, color);
+		ReleaseDC(hwnd, hdc);
+		index = 0;
+	}
+	else
+	{
+		index++;
+	}
+}
+inline void contSpline(HWND hwnd, HDC hdc, LPARAM lp, COLORREF color)
+{
+	const int maxPoints = 7;
+	static Vector p[maxPoints];
+	static int index = 0;
+
+	int x;
+	int y;
+
+	x = LOWORD(lp);
+	y = HIWORD(lp);
+	p[index][0] = x;
+	p[index][1] = y;
+
+	if (index == maxPoints-1)
+	{
+		hdc = GetDC(hwnd);
+		DrawCardinalSpline(hdc, p, maxPoints, 0.5, color);
+		ReleaseDC(hwnd, hdc);
+		index = 0;
+	}
+	else
+	{
+		index++;
+	}
 }
