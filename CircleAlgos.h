@@ -115,6 +115,25 @@ inline void DrawCircleMMidpoint(HDC hdc, int xc, int yc, int R, COLORREF color)
 		Draw8Points(hdc, xc, yc, Round(x), Round(y), color);
 	}
 }
+inline void DrawEllipseDirect(HDC hdc, int xc, int yc, double A, double B, COLORREF color)
+{
+	double x = 0, y = A;
+	while (y >= 0)
+	{
+		x++;
+		y = sqrt(B * B * (1 - ((x * x) / (A * A))));
+		Draw4Points(hdc, xc, yc, round(x), round(y), color);
+	}
+
+	x = B, y = 0;
+	while (x >= 0)
+	{
+		y++;
+		x = sqrt(A * A * (1 - ((y * y) / (B * B))));
+		Draw4Points(hdc, xc, yc, round(x), round(y), color);
+	}
+}
+
 inline void DrawEllipseIterative(HDC hdc, int xc, int yc, double A, double B, COLORREF color)
 {
 	//Ellipse iterative polar
@@ -130,5 +149,63 @@ inline void DrawEllipseIterative(HDC hdc, int xc, int yc, double A, double B, CO
 		y = y * cdt + (B / A) * x * sdt;
 		x = x1;
 		Draw4Points(hdc, xc, yc, Round(x), Round(y), color);
+	}
+}
+
+inline void DrawEllipseMidPoint(HDC hdc, int xc, int yc, double rx, double ry, COLORREF color)
+{
+	double dx, dy, d1, d2, x, y;
+	x = 0.0;
+	y = ry;
+
+	//d of first region
+	d1 = (ry * ry) - (rx * rx * ry) + (0.25 * rx * rx);
+	dx = 2 * ry * ry * x;
+	dy = 2 * rx * rx * y;
+
+	//first region
+	while (dx < dy)
+	{
+
+		Draw4Points(hdc, xc, yc, x, y, color);
+		if (d1 < 0)
+		{
+			x++;
+			dx = dx + (2 * ry * ry);
+			d1 = d1 + dx + (ry * ry);
+		}
+		else
+		{
+			x++;
+			y--;
+			dx = dx + (2 * ry * ry);
+			dy = dy - (2 * rx * rx);
+			d1 = d1 + dx - dy + (ry * ry);
+		}
+	}
+
+	//d of sec region
+	d2 = ((ry * ry) * ((x + 0.5) * (x + 0.5))) + ((rx * rx) * ((y - 1) * (y - 1))) - (rx * rx * ry * ry);
+
+	//Plotting points of second region
+	while (y >= 0)
+	{
+
+		Draw4Points(hdc, xc, yc, x, y, color);
+
+		if (d2 > 0)
+		{
+			y--;
+			dy = dy - (2 * rx * rx);
+			d2 = d2 + (rx * rx) - dy;
+		}
+		else
+		{
+			y--;
+			x++;
+			dx = dx + (2 * ry * ry);
+			dy = dy - (2 * rx * rx);
+			d2 = d2 + dx - dy + (rx * rx);
+		}
 	}
 }
