@@ -6,6 +6,9 @@
 #include <stdio.h>
 #define SAVE_ID 0x1
 #define LOAD_ID 0x2
+#define Red_B_ID 0x3
+#define Grn_B_ID 0x4
+#define Blu_B_ID 0x5
 
 using namespace std;
 
@@ -15,6 +18,7 @@ int command = 0;
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HIGHT = 720;
 const COLORREF AllColors[3] = { RGB(200,0,0), RGB(0,100,0), RGB(0,0,200) };
+COLORREF workingColor = AllColors[0];
 
 //Prototypes
 void saveScreen(HDC);
@@ -45,7 +49,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	static HWND hwndCombo;
 	static HWND hwndButtonSave;
 	static HWND hwndButtonLoad;
-	const TCHAR* items[] = 
+	static HWND hwnd_SL_Title;
+	static HWND hwndColorTile;
+	static HWND hwndButtonRed;
+	static HWND hwndButtonGreen;
+	static HWND hwndButtonBlue;
+	const TCHAR* items[] =
 	{
 		TEXT("0- Change the background of window to be white"),
 		TEXT("1- DDA Line Algorithm"),
@@ -86,36 +95,102 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)items[i]);
 
 
+		//Create save-load title
+		hwnd_SL_Title = CreateWindow(
+			TEXT("static"),
+			TEXT("Save and load"),
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+			SCREEN_WIDTH * 0.9,	// x position
+			10,					// y position
+			120,				// Width
+			20,					// Height
+			hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+
 		//Create Save button
 		hwndButtonSave = CreateWindow(
-			TEXT("BUTTON"),		// Predefined class; Unicode assumed 
+			TEXT("BUTTON"),		
 			TEXT("Save"),		// Button text 
-			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
-			SCREEN_WIDTH*0.75,	// x position 
-			10,					// y position 
-			100,				// Button width
-			20,					// Button height
-			hwnd,				// Parent window
-			(HMENU) SAVE_ID,	// No menu.
-			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-			NULL);				// Pointer not needed.
-
-
-
-		hwndButtonLoad = CreateWindow(
-			TEXT("BUTTON"),		// Predefined class; Unicode assumed 
-			TEXT("Load"),		// Button text 
-			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
 			SCREEN_WIDTH*0.9,	// x position 
-			10,					// y position 
+			30,					// y position 
 			100,				// Button width
 			20,					// Button height
 			hwnd,				// Parent window
-			(HMENU) LOAD_ID,	// No menu.
+			(HMENU) SAVE_ID,	// ID
 			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-			NULL);				// Pointer not needed.
-		
-		
+			NULL);				
+
+
+		//Create Load button
+		hwndButtonLoad = CreateWindow(
+			TEXT("BUTTON"),		
+			TEXT("Load"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH*0.9,	// x position 
+			60,					// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU) LOAD_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);	
+
+
+		//Create color title
+		hwndColorTile = CreateWindow(
+			TEXT("static"),
+			TEXT("Choose color"),
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+			SCREEN_WIDTH * 0.9,	// x position
+			150,				// y position
+			120,				// Width
+			20,					// Height
+			hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+
+		// Button to Set Color to red
+		hwndButtonRed = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Red"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			170,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Red_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+
+		// Button to Set Color to Green
+		hwndButtonGreen = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Green"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			200,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Grn_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+
+		// Button to Set Color to Green
+		hwndButtonBlue = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Blue"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			230,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Blu_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
 	break;
 
 	case WM_COMMAND:
@@ -148,41 +223,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				case LOAD_ID:
 					loadScreen(hdc);
 					break;
+
+				case Red_B_ID:
+					workingColor = AllColors[0];
+					break;
+
+				case Grn_B_ID:
+					workingColor = AllColors[1];
+					break;
+
+				case Blu_B_ID:
+					workingColor = AllColors[2];
+					break;
+
 			}
 		}
 		break;
 	case WM_LBUTTONDOWN:
 		if (command == 1) //DDA Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine3, AllColors[0]);
+			contLineDraw(hwnd, hdc, lParam, DrawLine3, workingColor);
 		}
 		else if (command == 2)	//Midpoint Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine5, AllColors[0]);
+			contLineDraw(hwnd, hdc, lParam, DrawLine5, workingColor);
 		}
 		else if (command == 3) //Parametric Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine1, AllColors[0]);
+			contLineDraw(hwnd, hdc, lParam, DrawLine1, workingColor);
 		}
 		else if (command == 4) //Direct Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleCartesian, AllColors[1]);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleCartesian, workingColor);
 		}
 		else if (command == 5) //Polar Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleDPolar, AllColors[1]);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleDPolar, workingColor);
 		}
 		else if (command == 6) //iterative Polar Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleIPolar, AllColors[1]);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleIPolar, workingColor);
 		}
 		else if (command == 7) //Midpoint Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleMidpoint, AllColors[1]);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleMidpoint, workingColor);
 		}
 		else if (command == 8) //Midpoint Circle Algorithm (Modified)
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleMMidpoint, AllColors[1]);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleMMidpoint, workingColor);
 		}
 		else if (command == 9) //Fill Circle (lines)
 		{
@@ -222,15 +310,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 18) //Direct Ellipse Drawing
 		{
-			contEllipseDraw(hwnd, hdc, lParam, AllColors[1], DrawEllipseDirect);
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseDirect);
 		}
 		else if (command == 19) //Polar Ellipse Drawing
 		{
-			contEllipseDraw(hwnd, hdc, lParam, AllColors[2], DrawEllipseIterative);
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseIterative);
 		}
 		else if (command == 20) //Midpoint Ellipse Drawing
 		{
-			contEllipseDraw(hwnd, hdc, lParam, AllColors[0], DrawEllipseMidPoint);
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseMidPoint);
 
 		}
 		else if (command == 21) //Rectangle Clipping (point)
