@@ -3,6 +3,12 @@
 #include "RunnerFunctions.h"
 #include "Header.h"
 #include "LineAlgos.h"
+#include <stdio.h>
+#define SAVE_ID 0x1
+#define LOAD_ID 0x2
+#define Red_B_ID 0x3
+#define Grn_B_ID 0x4
+#define Blu_B_ID 0x5
 #include "Clipping.h"
 #include "Filling.h"
 
@@ -11,6 +17,15 @@ using namespace std;
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HINSTANCE g_hinst;
 int command = 0;
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HIGHT = 720;
+const COLORREF AllColors[3] = { RGB(200,0,0), RGB(0,100,0), RGB(0,0,200) };
+COLORREF workingColor = AllColors[0];
+
+//Prototypes
+void saveScreen(HDC);
+void loadScreen(HDC);
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow)
 {
 	HWND hwnd;
@@ -23,8 +38,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
 	wc.hCursor = LoadCursor(0, IDC_ARROW);
 	g_hinst = hInstance;
 	RegisterClass(&wc);
-	hwnd = CreateWindow(wc.lpszClassName, TEXT("Choose option"), WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1280, 720, 0, 0, hInstance, 0);
-	while (GetMessage(&msg, NULL, 0, 0))
+	hwnd = CreateWindow(wc.lpszClassName, TEXT("Choose option"), WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, SCREEN_WIDTH, SCREEN_HIGHT, 0, 0, hInstance, 0);
+	while (GetMessage(&msg, NULL, 0, 0)) 
+
 	{
 		DispatchMessage(&msg);
 	}
@@ -34,6 +50,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc = GetDC(hwnd);
 	static HWND hwndCombo;
+	static HWND hwndButtonSave;
+	static HWND hwndButtonLoad;
+	static HWND hwnd_SL_Title;
+	static HWND hwndColorTile;
+	static HWND hwndButtonRed;
+	static HWND hwndButtonGreen;
+	static HWND hwndButtonBlue;
+
 	const TCHAR* items[] =
 	{
 		TEXT("0- Change the background of window to be white"),
@@ -74,7 +98,105 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//populate combo box
 		for (int i = 0; i < 29; i++)
 			SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)items[i]);
-		break;
+
+
+		//Create save-load title
+		hwnd_SL_Title = CreateWindow(
+			TEXT("static"),
+			TEXT("Save and load"),
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+			SCREEN_WIDTH * 0.9,	// x position
+			10,					// y position
+			120,				// Width
+			20,					// Height
+			hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+
+		//Create Save button
+		hwndButtonSave = CreateWindow(
+			TEXT("BUTTON"),		
+			TEXT("Save"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH*0.9,	// x position 
+			30,					// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU) SAVE_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);				
+
+
+		//Create Load button
+		hwndButtonLoad = CreateWindow(
+			TEXT("BUTTON"),		
+			TEXT("Load"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH*0.9,	// x position 
+			60,					// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU) LOAD_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);	
+
+
+		//Create color title
+		hwndColorTile = CreateWindow(
+			TEXT("static"),
+			TEXT("Choose color"),
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+			SCREEN_WIDTH * 0.9,	// x position
+			150,				// y position
+			120,				// Width
+			20,					// Height
+			hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+
+		// Button to Set Color to red
+		hwndButtonRed = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Red"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			170,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Red_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+
+		// Button to Set Color to Green
+		hwndButtonGreen = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Green"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			200,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Grn_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+
+		// Button to Set Color to Green
+		hwndButtonBlue = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Blue"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			230,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Blu_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+	break;
 
 	case WM_COMMAND:
 		//respond to combo box selection
@@ -85,51 +207,77 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			LRESULT sel = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
 			//get selected item text
 			SendMessage(hwndCombo, CB_GETLBTEXT, sel, (LPARAM)strText);
+			
+			if (sel == 0) //Change the background of window to be white
 
-			if (sel == 0 || sel != command) //Change the background of window to be white
 			{
 				HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
 				SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
 				InvalidateRect(hwnd, NULL, TRUE);
 			}
 			command = sel;
-
-
 			SetFocus(hwnd);
+		}
+		if ((HIWORD(wParam) == BN_CLICKED) && (lParam != 0))
+		{
+			switch (LOWORD(wParam))
+			{
+				case SAVE_ID:
+					saveScreen(hdc);
+					break;
+
+				case LOAD_ID:
+					loadScreen(hdc);
+					break;
+
+				case Red_B_ID:
+					workingColor = AllColors[0];
+					break;
+
+				case Grn_B_ID:
+					workingColor = AllColors[1];
+					break;
+
+				case Blu_B_ID:
+					workingColor = AllColors[2];
+					break;
+
+			}
 		}
 		break;
 	case WM_LBUTTONDOWN:
 		if (command == 1) //DDA Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine3);
+			contLineDraw(hwnd, hdc, lParam, DrawLine3, workingColor);
+
 		}
 		else if (command == 2)	//Midpoint Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine5);
+			contLineDraw(hwnd, hdc, lParam, DrawLine5, workingColor);
 		}
 		else if (command == 3) //Parametric Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine1);
+			contLineDraw(hwnd, hdc, lParam, DrawLine1, workingColor);
 		}
 		else if (command == 4) //Direct Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleCartesian);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleCartesian, workingColor);
 		}
 		else if (command == 5) //Polar Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleDPolar);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleDPolar, workingColor);
 		}
 		else if (command == 6) //iterative Polar Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleIPolar);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleIPolar, workingColor);
 		}
 		else if (command == 7) //Midpoint Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleMidpoint);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleMidpoint, workingColor);
 		}
 		else if (command == 8) //Midpoint Circle Algorithm (Modified)
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleMMidpoint);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleMMidpoint, workingColor);
 		}
 		else if (command == 9) //Fill Circle (lines)
 		{
@@ -177,18 +325,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 17) //Cardinal Spline Curve
 		{
-			contSpline(hwnd, hdc, lParam, RGB(0, 0, 200));
+			contSpline(hwnd, hdc, lParam, AllColors[2]);
 		}
 		else if (command == 18) //Direct Ellipse Drawing
 		{
-
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseDirect);
 		}
 		else if (command == 19) //Polar Ellipse Drawing
 		{
-			contEllipseDraw(hwnd, hdc, lParam, RGB(0, 0, 255));
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseIterative);
 		}
 		else if (command == 20) //Midpoint Ellipse Drawing
 		{
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseMidPoint);
 
 		}
 		else if (command == 21) //Rectangle Clipping (point)
@@ -422,11 +571,96 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 
-		/*case WM_ERASEBKGND:
-			HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
-			SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
-			break;*/
+
 	}
 
 	return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void loadScreen(HDC hdc)
+{
+	if (!(freopen("./output.txt", "r", stdin) == NULL))
+	{
+		int lines;
+		cin >> lines;
+
+		while (lines--)
+		{
+			//Read Data
+			int w ,h ,r, g,b;
+			cin >> w >> h >> r >> g >> b;
+
+			//Apply data
+			SetPixel(hdc, w, h, RGB(r, g, b));
+		}
+	}
+
+}
+void loadScreenold(HDC hdc)
+{
+	FILE* f = freopen("./output.txt", "r", stdin);
+	char line[100];
+
+	//Read while there exits new lines
+	while(fgets(line, sizeof(line), f) != NULL)
+	{
+		//generate 5 tokens
+		const char* tok1 = strtok(line, " ");
+		const char* tok2 = strtok(line, " ");
+		const char* tok3 = strtok(line, " ");
+		const char* tok4 = strtok(line, " ");
+		const char* tok5 = strtok(NULL, " ");
+
+		//Parse tokens
+		int w = atoi(tok1);
+		int h = atoi(tok2);
+		int r = atoi(tok3);
+		int g = atoi(tok4);
+		int b = atoi(tok5);
+
+		//Apply data
+		SetPixel(hdc, w, h, RGB(r,g,b));
+	}
+
+
+}
+
+
+void saveScreen(HDC hdc)
+{
+	if (!(freopen("./output.txt", "w", stdout) == NULL))
+	{
+		int lines = 0;
+		for (int w = 0; w < SCREEN_WIDTH; w++)
+		{
+			for (int h = 0; h < SCREEN_HIGHT; h++)
+			{
+				COLORREF color = GetPixel(hdc, w, h);
+				if (color == AllColors[0] || color == AllColors[1]  || color == AllColors[2])
+				{
+					lines++;
+				}
+			}
+		}
+		cout << lines << endl;
+		for (int w = 0; w < SCREEN_WIDTH; w++)
+		{
+			for (int h = 0; h < SCREEN_HIGHT; h++)
+			{
+				COLORREF color = GetPixel(hdc, w, h);
+				if (color == AllColors[0])
+				{
+					cout << w << " " << h << " " << 200 << " "<< 0 <<" "<< 0 <<endl;
+				}
+				else if (color == AllColors[1])
+				{
+					cout << w << " " << h << " " << 0 << " " << 100 << " " << 0 << endl;
+				}
+				else if (color == AllColors[2])
+				{
+					cout << w << " " << h << " " << 0 << " " << 0 << " " << 200 << endl; 
+				}
+			}
+		}
+	}
 }
