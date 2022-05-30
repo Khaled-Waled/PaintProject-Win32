@@ -86,7 +86,7 @@ inline void DrawCircleMidpoint(HDC hdc, int xc, int yc, int R, COLORREF color)
 
 		Draw8Points(hdc, xc, yc, x, y, color);
 	}
-	
+
 }
 inline void DrawCircleMMidpoint(HDC hdc, int xc, int yc, int R, COLORREF color)
 {
@@ -143,7 +143,7 @@ inline void DrawEllipseIterative(HDC hdc, int xc, int yc, double A, double B, CO
 	double cdt = cos(dt);
 	double sdt = sin(dt);
 
-	while (x >0)
+	while (x > 0)
 	{
 		double x1 = x * cdt - (A / B) * y * sdt;
 		y = y * cdt + (B / A) * x * sdt;

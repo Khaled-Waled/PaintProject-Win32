@@ -96,7 +96,7 @@ inline void contSpline(HWND hwnd, HDC hdc, LPARAM lp, COLORREF color)
 	p[index][0] = x;
 	p[index][1] = y;
 
-	if (index == maxPoints-1)
+	if (index == maxPoints - 1)
 	{
 		hdc = GetDC(hwnd);
 		DrawCardinalSpline(hdc, p, maxPoints, 0.5, color);
