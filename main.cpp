@@ -64,6 +64,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		TEXT("25- Square Clipping (Line)"),
 		TEXT("26- Circle Clipping (point)"),
 		TEXT("27- Circle Clipping (Line)"),
+		TEXT("28- Draw Square / Rectangle"),
 	};
 	switch (msg)
 	{
@@ -71,7 +72,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//create combo box
 		hwndCombo = CreateWindow(TEXT("combobox"), NULL, WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 10, 10, 350, 110, hwnd, NULL, g_hinst, NULL);
 		//populate combo box
-		for (int i = 0; i < 28; i++)
+		for (int i = 0; i < 29; i++)
 			SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)items[i]);
 		break;
 
@@ -140,7 +141,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 11) //Fill Square (Vertical)
 		{
-			//TODO
+			static double hermitePoints[4];
+			static int hermiteCounter = 0;
+			if (hermiteCounter == 4)
+			{
+				hermiteCounter++;
+				MyFloodHermite(hdc, LOWORD(lParam), HIWORD(lParam), hermitePoints[0], hermitePoints[1], hermitePoints[2], hermitePoints[3], RGB(250, 0, 0), RGB(250, 250, 250));
+			}
+			else
+			{
+				hermitePoints[hermiteCounter] = LOWORD(lParam);
+				hermitePoints[hermiteCounter + 1] = HIWORD(lParam);
+				hermiteCounter += 2;
+			}
 		}
 		else if (command == 12) //Fill Rectangle (horizontal)
 		{
@@ -178,7 +191,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 
 		}
-		else if (command == 21 || command == 24) //Rectangle Clipping (point)
+		else if (command == 21) //Rectangle Clipping (point)
 		{
 			hdc = GetDC(hwnd);
 			static int counter = 0;
@@ -200,7 +213,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 
 		}
-		else if (command == 22 || command == 25) //Rectangle Clipping (Line)
+		else if (command == 22) //Rectangle Clipping (Line)
 		{
 			hdc = GetDC(hwnd);
 			static int counter = 0;
@@ -268,6 +281,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
+		}
+		else if (command == 24)
+		{
+			hdc = GetDC(hwnd);
+			static int counter = 0;
+			static double points[8];
+			if (counter == 6)
+			{
+				Rectangle(hdc, points[0], points[1], points[4], points[5]);
+				counter += 2;
+			}
+			else if (counter < 6)
+			{
+				points[counter] = LOWORD(lParam);
+				points[counter + 1] = HIWORD(lParam);
+				counter += 2;
+			}
+			else
+			{
+				PointClipping(hdc, LOWORD(lParam), HIWORD(lParam), points[0], points[1], points[4], points[5], RGB(0, 0, 250));
+			}
+
+		}
+		else if (command == 25)
+		{
+
+			hdc = GetDC(hwnd);
+			static int counter = 0;
+			static double points[8];
+			static double line[4];
+			static int lineCounter = 0;
+			if (counter == 6)
+			{
+				Rectangle(hdc, points[0], points[1], points[4], points[5]);
+				counter += 2;
+			}
+			else if (counter < 6)
+			{
+				points[counter] = LOWORD(lParam);
+				points[counter + 1] = HIWORD(lParam);
+				counter += 2;
+			}
+			else
+			{
+				if (lineCounter < 4);
+				{
+					line[lineCounter] = LOWORD(lParam);
+					line[lineCounter + 1] = HIWORD(lParam);
+					lineCounter += 2;
+				}
+				if (lineCounter == 4)
+				{
+					CohenSuth(hdc, line[0], line[1], line[2], line[3], points[0], points[1], points[4], points[5]);
+					lineCounter = 0;
+				}
+			}
 		}
 		else if (command == 26) //Circle Clipping (point)
 		{
@@ -344,20 +413,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				points[counter] = LOWORD(lParam);
 				points[counter + 1] = HIWORD(lParam);
 				counter += 2;
-			}
-			else
-			{
-				if (hermiteCounter == 4)
-				{
-					hermiteCounter++;
-					MyFloodHermite(hdc, LOWORD(lParam), HIWORD(lParam), hermitePoints[0], hermitePoints[1], hermitePoints[2], hermitePoints[3], RGB(250, 0, 0), RGB(250, 250, 250));
-				}
-				else
-				{
-					hermitePoints[hermiteCounter] = LOWORD(lParam);
-					hermitePoints[hermiteCounter + 1] = HIWORD(lParam);
-					hermiteCounter += 2;
-				}
 			}
 		}
 		break;
