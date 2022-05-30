@@ -180,7 +180,7 @@ struct EdgeRec
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
- void myFloodFillNonRec(int x , int y , COLORREF border , COLORREF filling)
+ void myFloodFillNonRec(HDC hdc , int x , int y , COLORREF border , COLORREF filling)
 {
     stack<point>st;
     st.push(point(x,y));
