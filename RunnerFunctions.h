@@ -12,7 +12,7 @@ inline double eclidDis(Vector p1, Vector p2) {
 	return sqrt(((p1[0] - p2[0]) * (p1[0] - p2[0])) + ((p1[1] - p2[1]) * (p1[1] - p2[1])));
 }
 
-inline void contLineDraw(HWND hwnd, HDC hdc, LPARAM lp, void (*DrawLine) (HDC, int,int,int,int, COLORREF))
+inline void contLineDraw(HWND hwnd, HDC hdc, LPARAM lp, void (*DrawLine) (HDC, int, int, int, int, COLORREF))
 {
 	static int p[4];
 	static int idx = 0;
@@ -96,7 +96,7 @@ inline void contSpline(HWND hwnd, HDC hdc, LPARAM lp, COLORREF color)
 	p[index][0] = x;
 	p[index][1] = y;
 
-	if (index == maxPoints-1)
+	if (index == maxPoints - 1)
 	{
 		hdc = GetDC(hwnd);
 		DrawCardinalSpline(hdc, p, maxPoints, 0.5, color);

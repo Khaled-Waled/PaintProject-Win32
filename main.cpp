@@ -3,6 +3,8 @@
 #include "RunnerFunctions.h"
 #include "Header.h"
 #include "LineAlgos.h"
+#include "Clipping.h"
+#include "Filling.h"
 
 using namespace std;
 
@@ -22,7 +24,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
 	g_hinst = hInstance;
 	RegisterClass(&wc);
 	hwnd = CreateWindow(wc.lpszClassName, TEXT("Choose option"), WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1280, 720, 0, 0, hInstance, 0);
-	while (GetMessage(&msg, NULL, 0, 0)) 
+	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		DispatchMessage(&msg);
 	}
@@ -32,7 +34,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc = GetDC(hwnd);
 	static HWND hwndCombo;
-	const TCHAR* items[] = 
+	const TCHAR* items[] =
 	{
 		TEXT("0- Change the background of window to be white"),
 		TEXT("1- DDA Line Algorithm"),
@@ -75,19 +77,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_COMMAND:
 		//respond to combo box selection
-		if (HIWORD(wParam) == CBN_SELCHANGE) 
+		if (HIWORD(wParam) == CBN_SELCHANGE)
 		{
 			TCHAR strText[255] = TEXT("\0");
 			//get position of selected item
 			LRESULT sel = SendMessage(hwndCombo, CB_GETCURSEL, 0, 0);
 			//get selected item text
 			SendMessage(hwndCombo, CB_GETLBTEXT, sel, (LPARAM)strText);
-			
+
 			if (sel == 0 || sel != command) //Change the background of window to be white
 			{
 				HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
 				SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
-				InvalidateRect(hwnd, NULL, TRUE); 
+				InvalidateRect(hwnd, NULL, TRUE);
 			}
 			command = sel;
 
@@ -98,7 +100,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 		if (command == 1) //DDA Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine3); 
+			contLineDraw(hwnd, hdc, lParam, DrawLine3);
 		}
 		else if (command == 2)	//Midpoint Line Algorithm
 		{
@@ -176,45 +178,199 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 
 		}
-		else if (command == 21) //Rectangle Clipping (point)
+		else if (command == 21 || command == 24) //Rectangle Clipping (point)
 		{
+			hdc = GetDC(hwnd);
+			static int counter = 0;
+			static double points[8];
+			if (counter == 6)
+			{
+				Rectangle(hdc, points[0], points[1], points[4], points[5]);
+				counter += 2;
+			}
+			else if (counter < 6)
+			{
+				points[counter] = LOWORD(lParam);
+				points[counter + 1] = HIWORD(lParam);
+				counter += 2;
+			}
+			else
+			{
+				PointClipping(hdc, LOWORD(lParam), HIWORD(lParam), points[0], points[1], points[4], points[5], RGB(0,0,250));
+			}
 
 		}
-		else if (command == 22) //Rectangle Clipping (Line)
+		else if (command == 22 || command == 25) //Rectangle Clipping (Line)
 		{
-
+			hdc = GetDC(hwnd);
+			static int counter = 0;
+			static double points[8];
+			static double line[4];
+			static int lineCounter = 0;
+			if (counter == 6)
+			{
+				Rectangle(hdc, points[0], points[1], points[4], points[5]);
+				counter += 2;
+			}
+			else if (counter < 6)
+			{
+				points[counter] = LOWORD(lParam);
+				points[counter + 1] = HIWORD(lParam);
+				counter += 2;
+			}
+			else
+			{
+				if (lineCounter < 4);
+				{
+					line[lineCounter] = LOWORD(lParam);
+					line[lineCounter+1] = HIWORD(lParam);
+					lineCounter += 2;
+				}
+				if (lineCounter == 4)
+				{
+					CohenSuth(hdc, line[0], line[1], line[2], line[3], points[0], points[1], points[4], points[5]);
+					lineCounter = 0;
+				}
+			}
 		}
 		else if (command == 23) //Rectangle Clipping (Polygon)
 		{
-
-		}
-		else if (command == 24) //Square Clipping (point)
-		{
-
-		}
-		else if (command == 25) //Square Clipping (Line)
-		{
+			hdc = GetDC(hwnd);
+			static int counter = 0;
+			static double points[8];
+			static double line[4];
+			static int lineCounter = 0;
+			static int polygCounter = 0;
+			static POINT polyg[5];
+			if (counter == 6)
+			{
+				Rectangle(hdc, points[0], points[1], points[4], points[5]);
+				counter += 2;
+			}
+			else if (counter < 6)
+			{
+				points[counter] = LOWORD(lParam);
+				points[counter + 1] = HIWORD(lParam);
+				counter += 2;
+			}
+			else
+			{
+				if (polygCounter < 5);
+				{
+					polyg[polygCounter].x = LOWORD(lParam);
+					polyg[polygCounter].y = HIWORD(lParam);
+					polygCounter += 1;
+				}
+				if (polygCounter == 5)
+				{
+					PolygonClip(hdc, polyg, 5, points[0], points[1], points[4], points[5]);
+					polygCounter = 0;
+				}
+			}
 
 		}
 		else if (command == 26) //Circle Clipping (point)
 		{
+			static double Xc, Yc, pX, PY;
+			static double pointX, pointY;
+			static int circleCounter = 0;
+			static double R;
+			if (circleCounter == 0)
+			{
+				Xc = LOWORD(lParam);
+				Yc = HIWORD(lParam);
+				circleCounter++;
+			}
+			else if (circleCounter == 1)
+			{
+				R = sqrt(((Xc - LOWORD(lParam)) * (Xc - LOWORD(lParam))) + ((Yc - HIWORD(lParam)) * (Yc - HIWORD(lParam))));
+				DrawCircleCartesian(hdc, Xc, Yc, R, RGB(0,0,250));
+				circleCounter++;
+			}
+			else
+			{
+				PointClipping(hdc, LOWORD(lParam), HIWORD(lParam), Xc, Yc, R);
+			}
 
 		}
 		else if (command == 27) //Circle Clipping (Line)
 		{
-
+			static double Xc, Yc, pX, PY;
+			static double pointX, pointY;
+			static int circleCounter = 0;
+			static double lx, ly;
+			static int lineCounter;
+			static double R;
+			if (circleCounter == 0)
+			{
+				Xc = LOWORD(lParam);
+				Yc = HIWORD(lParam);
+				circleCounter++;
+			}
+			else if (circleCounter == 1)
+			{
+				R = sqrt(((Xc - LOWORD(lParam)) * (Xc - LOWORD(lParam))) + ((Yc - HIWORD(lParam)) * (Yc - HIWORD(lParam))));
+				DrawCircleCartesian(hdc, Xc, Yc, R, RGB(0, 0, 250));
+				circleCounter++;
+			}
+			else
+			{
+				if (lineCounter == 0)
+				{
+					lx = LOWORD(lParam);
+					ly = HIWORD(lParam);
+					lineCounter++;
+				}
+				else
+				{
+					lineClipping(hdc, lx, ly, LOWORD(lParam), HIWORD(lParam), Xc, Yc, R, RGB(0,0,250));
+					lineCounter = 0;
+				}
+			}
+		}
+		else if (command == 28)
+		{
+			static int counter = 0;
+			static int hermiteCounter = 0;
+			static double hermitePoints[4];
+			static double points[8];
+			if (counter == 6)
+			{
+				DrawSquareRectangle(hdc, points[0], points[1], points[4], points[5], RGB(250, 0, 0));
+				counter += 2;
+			}
+			else if (counter < 6)
+			{
+				points[counter] = LOWORD(lParam);
+				points[counter + 1] = HIWORD(lParam);
+				counter += 2;
+			}
+			else
+			{
+				if (hermiteCounter == 4)
+				{
+					hermiteCounter++;
+					MyFloodHermite(hdc, LOWORD(lParam), HIWORD(lParam), hermitePoints[0], hermitePoints[1], hermitePoints[2], hermitePoints[3], RGB(250, 0, 0), RGB(250, 250, 250));
+				}
+				else
+				{
+					hermitePoints[hermiteCounter] = LOWORD(lParam);
+					hermitePoints[hermiteCounter + 1] = HIWORD(lParam);
+					hermiteCounter += 2;
+				}
+			}
 		}
 		break;
-		
-	
+
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
 
-	/*case WM_ERASEBKGND:
-		HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
-		SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
-		break;*/
+		/*case WM_ERASEBKGND:
+			HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
+			SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
+			break;*/
 	}
 
 	return DefWindowProc(hwnd, msg, wParam, lParam);
