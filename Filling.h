@@ -49,10 +49,10 @@ void MyFloodHermite(HDC hdc, double x0, double y0, double x1, double y1, double 
 
 void DrawSquareRectangle(HDC hdc, double x1, double y1, double x3, double y3, COLORREF color)
 {
-	DrawLine1(hdc, x1, y1, x3, y1, color);
-	DrawLine1(hdc, x3, y1, x3, y3, color);
-	DrawLine1(hdc, x1, y1, x1, y3, color);
-	DrawLine1(hdc, x3, y3, x1, y3, color);
+	DrawLine4(hdc, x1, y1, x3, y1, color);
+	DrawLine4(hdc, x3, y1, x3, y3, color);
+	DrawLine4(hdc, x1, y1, x1, y3, color);
+	DrawLine4(hdc, x3, y3, x1, y3, color);
 }
 
 
