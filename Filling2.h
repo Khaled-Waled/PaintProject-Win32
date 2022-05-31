@@ -162,20 +162,16 @@ struct EdgeRec
 
  void myFloodFillRec(HDC hdc,int x , int y , COLORREF border , COLORREF filling)
 {
-    COLORREF color = Getpixel(p.x,p.y);
+    COLORREF color = GetPixel(hdc,x,y);
     if(color == border or color == filling)
     {
         return;
     }
-
-    setpixel(p.x,p.y,filling);
-
-    for(int i=0;i<4;i++)
-    {
-        int x1=dx[i]+p.x;
-        int y1=dy[i]+p.y;
-        myFloodFillRec(hdc,x1,y1,border,filling);
-    }
+    SetPixel(hdc,x,y,filling);
+    myFloodFillRec(hdc,x+1,y,border,filling);
+    myFloodFillRec(hdc,x-1,y,border,filling);
+    myFloodFillRec(hdc,x,y+1,border,filling);
+    myFloodFillRec(hdc,x,y-1,border,filling);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -183,25 +179,30 @@ struct EdgeRec
  void myFloodFillNonRec(HDC hdc , int x , int y , COLORREF border , COLORREF filling)
 {
     stack<point>st;
-    st.push(point(x,y));
+    point p;
+    p.x=x;
+    p.y=y;
+    st.push(p);
 
     while(!st.empty())
     {
-        point p = st.top();
+        point p1 = st.top();
         st.pop();
-
-        COLORREF color = Getpixel(p.x,p.y);
+        COLORREF color = GetPixel(hdc,p1.x,p1.y);
         if(color == border or color == filling)
         {
             continue;
         }
-        setpixel(p.x,p.y,filling);
-        for(int i=0;i<4;i++)
-        {
-            int x1=dx[i]+p.x;
-            int y1=dy[i]+p.y;
-            st.push(point(x1,y1));
-        }
+        SetPixel(hdc,p1.x,p1.y,filling);
+        point pp1,pp2,pp3,pp4;
+        pp1.x=p1.x+1;pp1.y=p1.y;
+        pp2.x=p1.x-1;pp2.y=p1.y;
+        pp3.x=p1.x;pp3.y=p1.y+1;
+        pp4.x=p1.x;pp4.y=p1.y-1;
+        st.push(pp1);
+        st.push(pp2);
+        st.push(pp3);
+        st.push(pp4);
     }
 }
 

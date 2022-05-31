@@ -5,6 +5,7 @@
 #include "LineAlgos.h"
 #include "Clipping.h"
 #include "Filling.h"
+#include "Filling2.h"
 
 using namespace std;
 
@@ -245,15 +246,85 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 13 or command == 14) //Convex and NON-Convex Polygon Fill
 		{
-		    //// Are the polygon points existed or not ?!
+		    static int x,y;
+		    static vector<point>arr(5);
+		    static int counter=0;
+
+		    if(counter<5)
+            {
+                x = LOWORD(lParam);
+                y = HIWORD(lParam);
+                arr[counter].x=x;
+                arr[counter].y=y;
+                counter++;
+            }
+            else
+            {
+                for(int i=0;i<5;i++)
+                {
+                    if(i==4)
+                        DrawLine1(hdc, arr[i].x,arr[i].y,arr[0].x,arr[0].y,RGB(255,0,0));
+                    else
+                        DrawLine1(hdc, arr[i].x,arr[i].y,arr[i+1].x,arr[i+1].y,RGB(255,0,0));
+                }
+                GeneralPolygonFill(hdc,arr,5,RGB(0,0,255));
+            }
 		}
 		else if (command == 15) //Recursive Flood Fill
 		{
-		    //// Are the shape drawn or not ?!
+		    static int x,y;
+		    static vector<point>arr(5);
+		    static int counter=0;
+
+		    if(counter<5)
+            {
+                x = LOWORD(lParam);
+                y = HIWORD(lParam);
+                arr[counter].x=x;
+                arr[counter].y=y;
+                counter++;
+            }
+            else
+            {
+                for(int i=0;i<5;i++)
+                {
+                    if(i==4)
+                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[0].x,arr[0].y,RGB(255,0,0));
+                    else
+                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[i+1].x,arr[i+1].y,RGB(255,0,0));
+                }
+                x = LOWORD(lParam);
+                y = HIWORD(lParam);
+                myFloodFillNonRec(hdc,x,y,RGB(255,0,0),RGB(0,0,255));
+            }
 		}
 		else if (command == 16) //NON-Recursive Flood Fill
 		{
-		    //// Are the shape drawn or not ?!
+		    static int x,y;
+		    static vector<point>arr(5);
+		    static int counter=0;
+
+		    if(counter<5)
+            {
+                x = LOWORD(lParam);
+                y = HIWORD(lParam);
+                arr[counter].x=x;
+                arr[counter].y=y;
+                counter++;
+            }
+            else
+            {
+                for(int i=0;i<5;i++)
+                {
+                    if(i==4)
+                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[0].x,arr[0].y,RGB(255,0,0));
+                    else
+                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[i+1].x,arr[i+1].y,RGB(255,0,0));
+                }
+                x = LOWORD(lParam);
+                y = HIWORD(lParam);
+                myFloodFillNonRec(hdc,x,y,RGB(255,0,0),RGB(0,0,255));
+            }
 		}
 		else if (command == 17) //Cardinal Spline Curve
 		{
