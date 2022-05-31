@@ -1,17 +1,17 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by PaintProject-Win32.rc
+// Used by GraphicsProjectSub.rc
 
 #define IDS_APP_TITLE			103
 
 #define IDR_MAINFRAME			128
-#define IDD_PAINTPROJECTWIN32_DIALOG	102
+#define IDD_GRAPHICSPROJECTSUB_DIALOG	102
 #define IDD_ABOUTBOX			103
 #define IDM_ABOUT				104
 #define IDM_EXIT				105
-#define IDI_PAINTPROJECTWIN32			107
+#define IDI_GRAPHICSPROJECTSUB			107
 #define IDI_SMALL				108
-#define IDC_PAINTPROJECTWIN32			109
+#define IDC_GRAPHICSPROJECTSUB			109
 #define IDC_MYICON				2
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1

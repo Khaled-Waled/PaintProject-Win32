@@ -14,6 +14,7 @@ void DrawHermiteCurve(HDC hdc, Vector p1, Vector T1, Vector p2, Vector T2, COLOR
         double x = a0 + a1 * t + a2 * t2 + a3 * t3;
         double y = b0 + b1 * t + b2 * t2 + b3 * t3;
         SetPixel(hdc, Round(x), Round(y), color);
+        savePixel(Round(x), Round(y), color);
     }
 }
 
