@@ -34,7 +34,7 @@ struct EdgeRec
  void fillingCircleWithLines(HDC hdc,int xc,int yc, int r,COLORREF color, int which)
 {
     int x=0;
-    int y=r;
+    int y=(r-1);
     int d=1-r;
     int c1=3, c2=5-(2*r);
     FillQuatrerLines(hdc,x,y,xc,yc,color,which);
