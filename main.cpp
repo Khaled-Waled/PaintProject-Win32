@@ -1,4 +1,4 @@
-#include <windows.h> 
+#include <windows.h>
 #include <iostream>
 #include "RunnerFunctions.h"
 #include "Header.h"
@@ -133,11 +133,95 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 9) //Fill Circle (lines)
 		{
-			//TODO
+			static double xc,yc,r,rx,ry,qx,qy;
+			static int counter = 0;
+			if(counter==0)
+            {
+                xc = LOWORD(lParam);
+                yc = HIWORD(lParam);
+                counter++;
+            }
+            else if(counter==1)
+            {
+                rx = LOWORD(lParam);
+                ry = HIWORD(lParam);
+                r=sqrt((abs(rx-xc)*abs(rx-xc)) + (abs(ry-yc)*abs(ry-yc)));
+                DrawCircleCartesian(hdc,rx,ry,r,RGB(255,0,0));
+                counter++;
+            }
+            else if(counter==2)
+            {
+                qx = LOWORD(lParam);
+                qy = HIWORD(lParam);
+                if(qx>=xc)
+                {
+                    if(qy<yc)
+                    {
+                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),1);
+                    }
+                    else
+                    {
+                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),2);
+                    }
+                }
+                else
+                {
+                    if(qy<yc)
+                    {
+                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),4);
+                    }
+                    else
+                    {
+                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),3);
+                    }
+                }
+            }
 		}
 		else if (command == 10) //Fill Circle (circles)
 		{
-			//TODO
+			static double xc,yc,r,rx,ry,qx,qy;
+			static int counter = 0;
+			if(counter==0)
+            {
+                xc = LOWORD(lParam);
+                yc = HIWORD(lParam);
+                counter++;
+            }
+            else if(counter==1)
+            {
+                rx = LOWORD(lParam);
+                ry = HIWORD(lParam);
+                r=sqrt((abs(rx-xc)*abs(rx-xc)) + (abs(ry-yc)*abs(ry-yc)));
+                DrawCircleCartesian(hdc,rx,ry,r,RGB(255,0,0));
+                counter++;
+            }
+            else if(counter==2)
+            {
+                qx = LOWORD(lParam);
+                qy = HIWORD(lParam);
+                if(qx>=xc)
+                {
+                    if(qy<yc)
+                    {
+                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),1);
+                    }
+                    else
+                    {
+                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),2);
+                    }
+                }
+                else
+                {
+                    if(qy<yc)
+                    {
+                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),4);
+                    }
+                    else
+                    {
+                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),3);
+                    }
+                }
+            }
 		}
 		else if (command == 11) //Fill Square (Vertical)
 		{
@@ -159,21 +243,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 
 		}
-		else if (command == 13) //Convex Polygon Fill
+		else if (command == 13 or command == 14) //Convex and NON-Convex Polygon Fill
 		{
-
-		}
-		else if (command == 14) //NON-Convex Polygon Fill
-		{
-
+		    //// Are the polygon points existed or not ?!
 		}
 		else if (command == 15) //Recursive Flood Fill
 		{
-
+		    //// Are the shape drawn or not ?!
 		}
 		else if (command == 16) //NON-Recursive Flood Fill
 		{
-
+		    //// Are the shape drawn or not ?!
 		}
 		else if (command == 17) //Cardinal Spline Curve
 		{
