@@ -1,17 +1,43 @@
-#include <windows.h>
+#include <windows.h> 
 #include <iostream>
 #include "RunnerFunctions.h"
 #include "Header.h"
 #include "LineAlgos.h"
+#include <stdio.h>
+#define LOAD_ID 0x2
+#define Clear_ID 0x6
+#define Red_B_ID 0x3
+#define Grn_B_ID 0x4
+#define Blu_B_ID 0x5
 #include "Clipping.h"
 #include "Filling.h"
+#include <fstream>
+#include <string>
 #include "Filling2.h"
+
 
 using namespace std;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HINSTANCE g_hinst;
 int command = 0;
+const int SCREEN_WIDTH = 1280;
+const int SCREEN_HIGHT = 720;
+const COLORREF AllColors[3] = { RGB(200,50,50), RGB(0,100,0), RGB(0,0,200) };
+COLORREF workingColor = AllColors[0];
+static string a;
+static string b;
+static char c;
+static char d;
+static char e;
+
+
+//Prototypes
+void saveScreen(HDC);
+void loadScreen(HDC);
+void clearScreen(HDC, HWND);
+
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, int nCmdShow)
 {
 	HWND hwnd;
@@ -21,11 +47,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLin
 	wc.hInstance = hInstance;
 	wc.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
 	wc.lpfnWndProc = WndProc;
-	wc.hCursor = LoadCursor(0, IDC_ARROW);
+	wc.hCursor = LoadCursor(0, IDC_CROSS);
 	g_hinst = hInstance;
 	RegisterClass(&wc);
-	hwnd = CreateWindow(wc.lpszClassName, TEXT("Choose option"), WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1280, 720, 0, 0, hInstance, 0);
+	hwnd = CreateWindow(wc.lpszClassName, TEXT("Choose option"), WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, SCREEN_WIDTH, SCREEN_HIGHT, 0, 0, hInstance, 0);
 	while (GetMessage(&msg, NULL, 0, 0))
+
 	{
 		DispatchMessage(&msg);
 	}
@@ -35,6 +62,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	HDC hdc = GetDC(hwnd);
 	static HWND hwndCombo;
+	static HWND hwndButtonLoad;
+	static HWND clearButton;
+	static HWND hwnd_SL_Title;
+	static HWND hwndColorTile;
+	static HWND hwndButtonRed;
+	static HWND hwndButtonGreen;
+	static HWND hwndButtonBlue;
+
+
 	const TCHAR* items[] =
 	{
 		TEXT("0- Change the background of window to be white"),
@@ -75,6 +111,106 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//populate combo box
 		for (int i = 0; i < 29; i++)
 			SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)items[i]);
+
+
+		//Create save-load title
+		hwnd_SL_Title = CreateWindow(
+			TEXT("static"),
+			TEXT("Load"),
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+			SCREEN_WIDTH * 0.9,	// x position
+			10,					// y position
+			120,				// Width
+			20,					// Height
+			hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+
+		//Create Save button
+		
+
+
+		//Create Load button
+		hwndButtonLoad = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Load"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			60,					// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)LOAD_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+
+		hwndButtonLoad = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Clear"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			30,					// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Clear_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+		//Create color title
+		hwndColorTile = CreateWindow(
+			TEXT("static"),
+			TEXT("Choose color"),
+			WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+			SCREEN_WIDTH * 0.9,	// x position
+			150,				// y position
+			120,				// Width
+			20,					// Height
+			hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+
+		// Button to Set Color to red
+		hwndButtonRed = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Red"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			170,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Red_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+
+		// Button to Set Color to Green
+		hwndButtonGreen = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Green"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			200,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Grn_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
+
+		// Button to Set Color to Green
+		hwndButtonBlue = CreateWindow(
+			TEXT("BUTTON"),
+			TEXT("Blue"),		// Button text 
+			WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+			SCREEN_WIDTH * 0.9,	// x position 
+			230,				// y position 
+			100,				// Button width
+			20,					// Button height
+			hwnd,				// Parent window
+			(HMENU)Blu_B_ID,	// ID
+			(HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
+			NULL);
+
 		break;
 
 	case WM_COMMAND:
@@ -87,142 +223,173 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//get selected item text
 			SendMessage(hwndCombo, CB_GETLBTEXT, sel, (LPARAM)strText);
 
-			if (sel == 0 || sel != command) //Change the background of window to be white
+			if (sel == 0) //Change the background of window to be white
+
 			{
 				HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
 				SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
 				InvalidateRect(hwnd, NULL, TRUE);
 			}
 			command = sel;
-
-
 			SetFocus(hwnd);
+		}
+		if ((HIWORD(wParam) == BN_CLICKED) && (lParam != 0))
+		{
+			switch (LOWORD(wParam))
+			{
+			
+			case Clear_ID:
+				clearScreen(hdc, hwnd);
+				break;
+			case LOAD_ID:
+				loadScreen(hdc);
+				break;
+
+			case Red_B_ID:
+				workingColor = AllColors[0];
+				break;
+
+			case Grn_B_ID:
+				workingColor = AllColors[1];
+				break;
+
+			case Blu_B_ID:
+				workingColor = AllColors[2];
+				break;
+
+			}
 		}
 		break;
 	case WM_LBUTTONDOWN:
 		if (command == 1) //DDA Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine3);
+			contLineDraw(hwnd, hdc, lParam, DrawLine3, workingColor);
+
 		}
 		else if (command == 2)	//Midpoint Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine5);
+			contLineDraw(hwnd, hdc, lParam, DrawLine4, workingColor);
 		}
 		else if (command == 3) //Parametric Line Algorithm
 		{
-			contLineDraw(hwnd, hdc, lParam, DrawLine1);
+			contLineDraw(hwnd, hdc, lParam, DrawLine1, workingColor);
 		}
 		else if (command == 4) //Direct Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleCartesian);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleCartesian, workingColor);
 		}
 		else if (command == 5) //Polar Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleDPolar);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleDPolar, workingColor);
 		}
 		else if (command == 6) //iterative Polar Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleIPolar);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleIPolar, workingColor);
 		}
 		else if (command == 7) //Midpoint Circle Algorithm
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleMidpoint);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleMidpoint, workingColor);
 		}
 		else if (command == 8) //Midpoint Circle Algorithm (Modified)
 		{
-			contCircleDraw(hwnd, hdc, lParam, DrawCircleMMidpoint);
+			contCircleDraw(hwnd, hdc, lParam, DrawCircleMMidpoint, workingColor);
 		}
 		else if (command == 9) //Fill Circle (lines)
 		{
-			static double xc,yc,r,rx,ry,qx,qy;
+			static double xc, yc, r, rx, ry, qx, qy;
 			static int counter = 0;
-			if(counter==0)
-            {
-                xc = LOWORD(lParam);
-                yc = HIWORD(lParam);
-                counter++;
-            }
-            else if(counter==1)
-            {
-                rx = LOWORD(lParam);
-                ry = HIWORD(lParam);
-                r=sqrt((abs(rx-xc)*abs(rx-xc)) + (abs(ry-yc)*abs(ry-yc)));
-                DrawCircleCartesian(hdc,rx,ry,r,RGB(255,0,0));
-                counter++;
-            }
-            else if(counter==2)
-            {
-                qx = LOWORD(lParam);
-                qy = HIWORD(lParam);
-                if(qx>=xc)
-                {
-                    if(qy<yc)
-                    {
-                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),1);
-                    }
-                    else
-                    {
-                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),2);
-                    }
-                }
-                else
-                {
-                    if(qy<yc)
-                    {
-                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),4);
-                    }
-                    else
-                    {
-                        fillingCircleWithLines(hdc,rx,ry,r,RGB(0,255,0),3);
-                    }
-                }
-            }
+			if (counter == 0)
+			{
+				xc = LOWORD(lParam);
+				yc = HIWORD(lParam);
+				counter++;
+			}
+			else if (counter == 1)
+			{
+				rx = LOWORD(lParam);
+				ry = HIWORD(lParam);
+				r = sqrt((abs(rx - xc) * abs(rx - xc)) + (abs(ry - yc) * abs(ry - yc)));
+				DrawCircleCartesian(hdc, rx, ry, r, RGB(255, 0, 0));
+				counter++;
+			}
+			else if (counter == 2)
+			{
+				qx = LOWORD(lParam);
+				qy = HIWORD(lParam);
+				if (qx < rx)
+				{
+					if (qy < ry)
+					{
+						fillingCircleWithLines(hdc, rx, ry, r, RGB(0, 255, 0), 4);
+					}
+					else
+					{
+						fillingCircleWithLines(hdc, rx, ry, r, RGB(0, 255, 0), 3);
+					}
+				}
+				else
+				{
+					if (qy < ry)
+					{
+						fillingCircleWithLines(hdc, rx, ry, r, RGB(0, 255, 0), 1);
+					}
+					else
+					{
+						fillingCircleWithLines(hdc, rx, ry, r, RGB(0, 255, 0), 2);
+					}
+				}
+				counter = 0;
+
+			}
+			
 		}
 		else if (command == 10) //Fill Circle (circles)
 		{
-			static double xc,yc,r,rx,ry,qx,qy;
+			static double xc, yc, r, rx, ry, qx, qy;
 			static int counter = 0;
-			if(counter==0)
-            {
-                xc = LOWORD(lParam);
-                yc = HIWORD(lParam);
-                counter++;
-            }
-            else if(counter==1)
-            {
-                rx = LOWORD(lParam);
-                ry = HIWORD(lParam);
-                r=sqrt((abs(rx-xc)*abs(rx-xc)) + (abs(ry-yc)*abs(ry-yc)));
-                DrawCircleCartesian(hdc,rx,ry,r,RGB(255,0,0));
-                counter++;
-            }
-            else if(counter==2)
-            {
-                qx = LOWORD(lParam);
-                qy = HIWORD(lParam);
-                if(qx>=xc)
-                {
-                    if(qy<yc)
-                    {
-                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),1);
-                    }
-                    else
-                    {
-                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),2);
-                    }
-                }
-                else
-                {
-                    if(qy<yc)
-                    {
-                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),4);
-                    }
-                    else
-                    {
-                        fillingCircleWithCircles(hdc,rx,ry,r,RGB(0,255,0),3);
-                    }
-                }
-            }
+			if (counter == 0)
+			{
+				xc = LOWORD(lParam);
+				yc = HIWORD(lParam);
+				counter++;
+			}
+			else if (counter == 1)
+			{
+				rx = LOWORD(lParam);
+				ry = HIWORD(lParam);
+				r = sqrt((abs(rx - xc) * abs(rx - xc)) + (abs(ry - yc) * abs(ry - yc)));
+				DrawCircleCartesian(hdc, rx, ry, r, RGB(255, 0, 0));
+				counter++;
+			}
+			else if (counter == 2)
+			{
+				qx = LOWORD(lParam);
+				qy = HIWORD(lParam);
+				if (qx < rx)
+				{
+					if (qy < ry)
+					{
+						fillingCircleWithCircles(hdc, rx, ry, r, RGB(0, 255, 0), 4);
+					}
+					else
+					{
+						fillingCircleWithCircles(hdc, rx, ry, r, RGB(0, 255, 0), 3);
+					}
+				}
+				else
+				{
+					if (qy < ry)
+					{
+						fillingCircleWithCircles(hdc, rx, ry, r, RGB(0, 255, 0), 1);
+					}
+					else
+					{
+						fillingCircleWithCircles(hdc, rx, ry, r, RGB(0, 255, 0), 2);
+					}
+				}
+				counter = 0;
+			}
+			
 		}
 		else if (command == 11) //Fill Square (Vertical)
 		{
@@ -231,7 +398,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if (hermiteCounter == 4)
 			{
 				hermiteCounter++;
-				MyFloodHermite(hdc, LOWORD(lParam), HIWORD(lParam), hermitePoints[0], hermitePoints[1], hermitePoints[2], hermitePoints[3], RGB(250, 0, 0), RGB(250, 250, 250));
+				MyFloodHermite(hdc, LOWORD(lParam), HIWORD(lParam), hermitePoints[0], hermitePoints[1], hermitePoints[2], hermitePoints[3], AllColors[0], workingColor);
+				hermiteCounter = 0;
 			}
 			else
 			{
@@ -242,104 +410,113 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (command == 12) //Fill Rectangle (horizontal)
 		{
+			static double hermitePoints[4];
+			static int hermiteCounter = 0;
+			if (hermiteCounter == 4)
+			{
+				hermiteCounter++;
+				MyFloodBezier(hdc, LOWORD(lParam), HIWORD(lParam), hermitePoints[0], hermitePoints[1], hermitePoints[2], hermitePoints[3], AllColors[0], workingColor);
+				hermiteCounter = 0;
+			}
+			else
+			{
+				hermitePoints[hermiteCounter] = LOWORD(lParam);
+				hermitePoints[hermiteCounter + 1] = HIWORD(lParam);
+				hermiteCounter += 2;
+			}
 
 		}
-		else if (command == 13 or command == 14) //Convex and NON-Convex Polygon Fill
+		else if (command == 13)
 		{
-		    static int x,y;
-		    static vector<point>arr(5);
-		    static int counter=0;
+			static int x, y;
+			static vector<Vector>arr(5);
+			static int counter = 0;
 
-		    if(counter<5)
-            {
-                x = LOWORD(lParam);
-                y = HIWORD(lParam);
-                arr[counter].x=x;
-                arr[counter].y=y;
-                counter++;
-            }
-            else
-            {
-                for(int i=0;i<5;i++)
-                {
-                    if(i==4)
-                        DrawLine1(hdc, arr[i].x,arr[i].y,arr[0].x,arr[0].y,RGB(255,0,0));
-                    else
-                        DrawLine1(hdc, arr[i].x,arr[i].y,arr[i+1].x,arr[i+1].y,RGB(255,0,0));
-                }
-                GeneralPolygonFill(hdc,arr,5,RGB(0,0,255));
-            }
+			if (counter < 5)
+			{
+				x = LOWORD(lParam);
+				y = HIWORD(lParam);
+				arr[counter][0] = x;
+				arr[counter][1] = y;
+				counter++;
+			}
+			else
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					if (i == 4)
+						DrawLine1(hdc, arr[i][0], arr[i][1], arr[0][0], arr[0][1], RGB(255, 0, 0));
+					else
+						DrawLine1(hdc, arr[i][0], arr[i][1], arr[i + 1][0], arr[i + 1][1], RGB(255, 0, 0));
+				}
+				ConvexFill(hdc, arr, 5, RGB(0, 0, 255));
+				counter = 0;
+			}
 		}
+		else if (command == 14)
+		{
+			static int x, y;
+			static vector<point>arr(5);
+			static int counter = 0;
+
+			if (counter < 5)
+			{
+				x = LOWORD(lParam);
+				y = HIWORD(lParam);
+				arr[counter].x = x;
+				arr[counter].y = y;
+				counter++;
+			}
+			else
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					if (i == 4)
+						DrawLine1(hdc, arr[i].x, arr[i].y, arr[0].x, arr[0].y, RGB(255, 0, 0));
+					else
+						DrawLine1(hdc, arr[i].x, arr[i].y, arr[i + 1].x, arr[i + 1].y, RGB(255, 0, 0));
+				}
+				GeneralPolygonFill(hdc, arr, 5, RGB(0, 0, 255));
+				counter = 0;
+			}
+		}
+		
 		else if (command == 15) //Recursive Flood Fill
 		{
-		    static int x,y;
-		    static vector<point>arr(5);
-		    static int counter=0;
+			OutputDebugStringA("Flood");
 
-		    if(counter<5)
-            {
-                x = LOWORD(lParam);
-                y = HIWORD(lParam);
-                arr[counter].x=x;
-                arr[counter].y=y;
-                counter++;
-            }
-            else
-            {
-                for(int i=0;i<5;i++)
-                {
-                    if(i==4)
-                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[0].x,arr[0].y,RGB(255,0,0));
-                    else
-                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[i+1].x,arr[i+1].y,RGB(255,0,0));
-                }
-                x = LOWORD(lParam);
-                y = HIWORD(lParam);
-                myFloodFillNonRec(hdc,x,y,RGB(255,0,0),RGB(0,0,255));
-            }
+			static int x, y;
+
+			x = LOWORD(lParam);
+			y = HIWORD(lParam);
+			myFloodFillNonRec(hdc, x, y, RGB(200, 50, 50), RGB(0, 0, 255));
+				
+
 		}
 		else if (command == 16) //NON-Recursive Flood Fill
 		{
-		    static int x,y;
-		    static vector<point>arr(5);
-		    static int counter=0;
+			static int x, y;
 
-		    if(counter<5)
-            {
-                x = LOWORD(lParam);
-                y = HIWORD(lParam);
-                arr[counter].x=x;
-                arr[counter].y=y;
-                counter++;
-            }
-            else
-            {
-                for(int i=0;i<5;i++)
-                {
-                    if(i==4)
-                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[0].x,arr[0].y,RGB(255,0,0));
-                    else
-                        DrawLine2(hdc, arr[i].x,arr[i].y,arr[i+1].x,arr[i+1].y,RGB(255,0,0));
-                }
-                x = LOWORD(lParam);
-                y = HIWORD(lParam);
-                myFloodFillNonRec(hdc,x,y,RGB(255,0,0),RGB(0,0,255));
-            }
+			x = LOWORD(lParam);
+			y = HIWORD(lParam);
+			myFloodFillNonRec(hdc, x, y, RGB(200, 50, 50), RGB(0, 0, 255));
+			
 		}
 		else if (command == 17) //Cardinal Spline Curve
 		{
-			contSpline(hwnd, hdc, lParam, RGB(0, 0, 200));
+			contSpline(hwnd, hdc, lParam, AllColors[2]);
 		}
 		else if (command == 18) //Direct Ellipse Drawing
 		{
-
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseDirect);
 		}
 		else if (command == 19) //Polar Ellipse Drawing
 		{
-			contEllipseDraw(hwnd, hdc, lParam, RGB(0, 0, 255));
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseIterative);
 		}
 		else if (command == 20) //Midpoint Ellipse Drawing
 		{
+			contEllipseDraw(hwnd, hdc, lParam, workingColor, DrawEllipseMidPoint);
 
 		}
 		else if (command == 21) //Rectangle Clipping (point)
@@ -360,7 +537,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			}
 			else
 			{
-				PointClipping(hdc, LOWORD(lParam), HIWORD(lParam), points[0], points[1], points[4], points[5], RGB(0,0,250));
+				PointClipping(hdc, LOWORD(lParam), HIWORD(lParam), points[0], points[1], points[4], points[5], RGB(0, 0, 250));
 			}
 
 		}
@@ -387,7 +564,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				if (lineCounter < 4);
 				{
 					line[lineCounter] = LOWORD(lParam);
-					line[lineCounter+1] = HIWORD(lParam);
+					line[lineCounter + 1] = HIWORD(lParam);
 					lineCounter += 2;
 				}
 				if (lineCounter == 4)
@@ -504,7 +681,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			else if (circleCounter == 1)
 			{
 				R = sqrt(((Xc - LOWORD(lParam)) * (Xc - LOWORD(lParam))) + ((Yc - HIWORD(lParam)) * (Yc - HIWORD(lParam))));
-				DrawCircleCartesian(hdc, Xc, Yc, R, RGB(0,0,250));
+				DrawCircleCartesian(hdc, Xc, Yc, R, RGB(0, 0, 250));
 				circleCounter++;
 			}
 			else
@@ -543,7 +720,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 				else
 				{
-					lineClipping(hdc, lx, ly, LOWORD(lParam), HIWORD(lParam), Xc, Yc, R, RGB(0,0,250));
+					lineClipping(hdc, lx, ly, LOWORD(lParam), HIWORD(lParam), Xc, Yc, R, RGB(0, 0, 250));
 					lineCounter = 0;
 				}
 			}
@@ -556,8 +733,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			static double points[8];
 			if (counter == 6)
 			{
-				DrawSquareRectangle(hdc, points[0], points[1], points[4], points[5], RGB(250, 0, 0));
-				counter += 2;
+				DrawSquareRectangle(hdc, points[0], points[1], points[4], points[5], AllColors[0]);
+				counter = 0;
 			}
 			else if (counter < 6)
 			{
@@ -573,11 +750,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 
-		/*case WM_ERASEBKGND:
-			HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
-			SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
-			break;*/
+
 	}
 
 	return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void loadScreen(HDC hdc)
+{
+
+	ifstream infile("./out.txt");
+	while (infile >> a >> b >> c >> d >> e)
+	{
+		SetPixel(hdc, stoi(a), stoi(b), RGB(c, d, e));
+	}
+}
+
+
+void saveScreen(HDC hdc)
+{
+	OutputDebugStringA("Saved");
+}
+
+void clearScreen(HDC hdc, HWND hwnd)
+{
+	HBRUSH brush = CreateSolidBrush(RGB(255, 255, 255));
+	SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
+	InvalidateRect(hwnd, NULL, TRUE);
+	FILE* p = fopen("out.txt", "w");
+	fclose(p);
 }

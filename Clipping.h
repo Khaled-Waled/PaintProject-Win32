@@ -28,7 +28,7 @@ typedef Vertex(*IntersectFunc)(Vertex& v1, Vertex& v2, int edge);
 //Circle Clipping
 void PointClipping(HDC hdc, double x, double y, double XC, double YC, double R)
 {
-
+	OutputDebugStringA("Circle Point Clipping");
 	COLORREF outColor = RGB(255, 255, 255);
 	COLORREF inColor = RGB(0, 0, 255);
 
@@ -36,9 +36,6 @@ void PointClipping(HDC hdc, double x, double y, double XC, double YC, double R)
 
 	if (newR < R)
 		SetPixel(hdc, x, y, inColor);
-
-	else SetPixel(hdc, x, y, outColor);
-
 }
 
 
@@ -47,7 +44,7 @@ void lineClipping(HDC hdc, double x1, double y1, double x2, double y2, double XC
 	int dx = x2 - x1;
 	int dy = y2 - y1;
 
-
+	OutputDebugStringA("Circle Line Clipping");
 	if (abs(dy) <= abs(dx))
 	{
 		if (x1 > x2)
@@ -133,6 +130,8 @@ void lineClipping(HDC hdc, double x1, double y1, double x2, double y2, double XC
 //Square-Rectangle Clipping
 void PointClipping(HDC hdc, int x, int y, int xleft, int ytop, int xright, int ybottom, COLORREF color)
 {
+	OutputDebugStringA("Square Point Clipping");
+
 	if (x >= xleft && x <= xright && y >= ytop && y <= ybottom)
 		SetPixel(hdc, x, y, color);
 }
@@ -166,6 +165,8 @@ void HIntersect(double xs, double ys, double xe, double ye, int y, double* xi, d
 
 void CohenSuth(HDC hdc, int xs, int ys, int xe, int ye, int xleft, int ytop, int xright, int ybottom)
 {
+	OutputDebugStringA("Square Line Clipping");
+
 	double x1 = xs, y1 = ys, x2 = xe, y2 = ye;
 	OutCode out1 = GetOutCode(x1, y1, xleft, ytop, xright, ybottom);
 	OutCode out2 = GetOutCode(x2, y2, xleft, ytop, xright, ybottom);
@@ -261,6 +262,8 @@ Vertex HIntersect(Vertex& v1, Vertex& v2, int yedge)
 
 void PolygonClip(HDC hdc, POINT* p, int n, int xleft, int ytop, int xright, int ybottom)
 {
+	OutputDebugStringA("Square PolygonClip");
+
 	VertexList vlist;
 	for (int i = 0; i < n; i++)vlist.push_back(Vertex(p[i].x, p[i].y));
 	vlist = ClipWithEdge(vlist, xleft, InLeft, VIntersect);
